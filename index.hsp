@@ -1,0 +1,74 @@
+#runtime "hsp3cl"
+#packopt name "getchcondid"
+	#module
+	#uselib "kernel32.dll"
+	#cfunc CreateProcess "CreateProcessA" int,sptr,int,int,int,int,int,int,var,var
+	#cfunc WaitForSingleObject "WaitForSingleObject" int,int
+	#cfunc GetEnvironmentVariable "GetEnvironmentVariableA" var,var,int
+	#cfunc CreatePipe "CreatePipe" var,var,var,int
+	#cfunc CloseHandle "CloseHandle" int
+	#cfunc PeekNamedPipe "PeekNamedPipe" int,int,int,int,int,int
+	#cfunc ReadFile "ReadFile" int,var,int,var,int
+	#define SW_HIDE	0
+	#define SW_SHOW	5
+	#deffunc consexec var prm1,str prm2
+	dosexcmd = prm2 : if strlen(dosexcmd)==0 : return -1
+	#define MAX_PATH	260
+	sdim cp,MAX_PATH+2
+	ev="Comspec"	
+	ret=GetEnvironmentVariable(ev,cp,MAX_PATH)
+	if ret==0 : return -1
+	filename=cp+" /c "+dosexcmd
+	#const MAX_BUF_SIZE	1024*1024
+	sdim szBuf,MAX_BUF_SIZE
+
+	sa=12,0,1 : ret=CreatePipe(hRead,hWrite,sa,MAX_BUF_SIZE)
+	;***** 子プロセスを作成 *****
+	#define STARTF_USESHOWWINDOW	1
+	#define STARTF_USESTDHANDLES	$00000100
+
+	dim lpsiStartInfo,17	;STARTUPINFO構造体
+	dim lppiProcInfo,4	;PROCESS_INFOMATION構造体
+	lpsiStartInfo(0)  = 68
+	lpsiStartInfo(11) = STARTF_USESTDHANDLES|STARTF_USESHOWWINDOW
+	lpsiStartInfo(12) = SW_HIDE
+	lpsiStartInfo(15) = hWrite
+	ret=CreateProcess(0,filename,0,0,1,0,0,0,lpsiStartInfo,lppiProcInfo)
+	if ret==0 : end
+
+
+	hprocess=lppiProcInfo(0)
+	ret=WaitForSingleObject(hprocess,$ffffffff)
+	ret=CloseHandle(hWrite)
+	rcvbuf=""	;Buffer Size HSP側で自動確保
+	repeat
+		await 10
+		;***** 標準出力パイプの内容を調べる *****
+		ret=PeekNamedPipe(hRead,0,0,0,dwStdOut,0)
+		ret=ReadFile(hRead,szBuf,4096,dwRead, 0)
+		if dwRead<4096 : memcpy szBuf, szBuf, dwRead, 0, 0 : poke szBuf, dwRead : rcvbuf+=szBuf : break
+		if dwRead==0 : break
+		rcvbuf+=szBuf
+	loop
+	prm1=rcvbuf
+	ret=CloseHandle(hRead)
+	sdim szBuf,0 : sdim cp,0 : sdim rcvbuf,0
+	return 0
+	#global
+
+//url="https://www.google.com/maps/d/viewer?mid=1u08OOkM4LbGkJjMSUKpyYdlhpmDNRgY&ll=35.313710244583106%2C139.4231822&z=13"
+//url="https://www.google.com/maps/d/viewer?mid=190TJMeMI6AMDIv0MHHU06PTMfo7ZXIA&ll=35.45823034680608%2C139.618505&z=15"
+url=dir_cmdline
+repeat:if strmid(url,0,1)=" "{url=strmid(url,1,strlen(url))}else{break}:loop
+//if strmid(url,0,4)!"http"{mes "[]",1:end}
+//consexec buf,"curl -c cookie.txt -b cookie.txt \"https://online.cyberhome.ne.jp/user/?t=reg_form\"   -H \"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7\"   -H \"Accept-Language: ja,en;q=0.9,en-GB;q=0.8,en-US;q=0.7\"   -H \"Cache-Control: max-age=0\"   -H \"Connection: keep-alive\"   -H \"Content-Type: application/x-www-form-urlencoded\"   -H \"Cookie: __utma=120222106.820879388.1705831931.1705831931.1705831931.1; __utmz=120222106.1705831931.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); _ga_1J3KZZLNBG=GS1.1.1705831933.1.0.1705831933.60.0.0; _ga=GA1.3.1474940224.1705831933; style=false; FNJSESSID=c69da3776a88770bc1905308d593432e\"   -H \"Origin: https://online.cyberhome.ne.jp\"   -H \"Referer: https://online.cyberhome.ne.jp/user/?t=reg_form\" --data-raw \"RULE_CHK=%89%EF%88%F5%8BK%96%F1%82%C9%93%AF%88%D3%82%B7%82%E9^\^&PRV_CHK=%8C%C2%90l%8F%EE%95%F1%82%CC%8E%E6%88%B5%82%C9%82%C2%82%A2%82%C4%93%AF%88%D3%82%B7%82%E9^\^&agree=1^\^&t=reg_form\""
+//consexec buf,"curl -c cookie.txt -b cookie.txt \"https://online.cyberhome.ne.jp/user/?t=reg_form\"   -H \"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7\"   -H \"Accept-Language: ja,en;q=0.9,en-GB;q=0.8,en-US;q=0.7\"   -H \"Cache-Control: max-age=0\"   -H \"Connection: keep-alive\"   -H \"Content-Type: application/x-www-form-urlencoded\"   -H \"Cookie: __utma=120222106.820879388.1705831931.1705831931.1705831931.1; __utmz=120222106.1705831931.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); _ga_1J3KZZLNBG=GS1.1.1705831933.1.0.1705831933.60.0.0; _ga=GA1.3.1474940224.1705831933; style=false; FNJSESSID=c69da3776a88770bc1905308d593432e\"   -H \"Origin: https://online.cyberhome.ne.jp\"   -H \"Referer: https://online.cyberhome.ne.jp/user/?t=reg_form\" --data-raw \"RULE_CHK=%89%EF%88%F5%8BK%96%F1%82%C9%93%AF%88%D3%82%B7%82%E9^\^&PRV_CHK=%8C%C2%90l%8F%EE%95%F1%82%CC%8E%E6%88%B5%82%C9%82%C2%82%A2%82%C4%93%AF%88%D3%82%B7%82%E9^\^&agree=1^\^&t=reg_form\""
+sdim buf2,256,1024
+lf="":poke lf,0,0x0a:mc="":if url=""{mes "CondominiumID	CondominiumName"+lf,1}
+repeat 100000-int(url)
+mc="CH"+str(cnt+int(url))
+consexec buf,"curl \"https://online.cyberhome.ne.jp/user/?t=confirm\"   -H \"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7\"   -H \"Accept-Language: ja,en;q=0.9,en-GB;q=0.8,en-US;q=0.7\"   -H \"Cache-Control: max-age=0\"   -H \"Cookie: __utma=120222106.820879388.1705831931.1705831931.1705831931.1; __utmz=120222106.1705831931.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); _ga_1J3KZZLNBG=GS1.1.1705831933.1.0.1705831933.60.0.0; _ga=GA1.3.1474940224.1705831933; style=false; FNJSESSID=c69da3776a88770bc1905308d593432e\"     -H \"Connection: keep-alive\"   -H \"Content-Type: application/x-www-form-urlencoded\" -H \"Origin: https://online.cyberhome.ne.jp\"   -H \"Referer: https://online.cyberhome.ne.jp/user/?t=reg_form\" --data-raw \"mansion_cd="+mc+"&room_no=&name1=&name2=&furigana1=&furigana2=&birth1=&birth2=&birth3=&tel=&tel3=&fax=&mail=&mail_pass=&mail_pass2=&x=0&y=0&t=confirm&task_id=\""
+split buf,lf,buf2
+mes mc+"	"+buf2(512)+lf,1
+loop
+end
