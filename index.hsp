@@ -68,7 +68,12 @@ lf="":poke lf,0,0x0a:mc="":if url=""{mes "CondominiumID	CondominiumName"+lf,1}
 repeat 100000-int(url)
 mc="CH"+str(cnt+int(url))
 consexec buf,"curl -b cookie.txt \"https://online.cyberhome.ne.jp/user/?t=confirm\"   -H \"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7\"   -H \"Accept-Language: ja,en;q=0.9,en-GB;q=0.8,en-US;q=0.7\"   -H \"Cache-Control: max-age=0\"   -H \"Connection: keep-alive\"   -H \"Content-Type: application/x-www-form-urlencoded\" -H \"Origin: https://online.cyberhome.ne.jp\"   -H \"Referer: https://online.cyberhome.ne.jp/user/?t=reg_form\" --data-raw \"mansion_cd="+mc+"&room_no=&name1=&name2=&furigana1=&furigana2=&birth1=&birth2=&birth3=&tel=&tel3=&fax=&mail=&mail_pass=&mail_pass2=&x=0&y=0&t=confirm&task_id=\""
+buf2(512)="\\\\___NOCOND___\\\\"
 split buf,lf,buf2
+if buf2(512)="\\\\___NOCOND___\\\\"{
+consexec buf,"curl -c cookie.txt -b cookie.txt \"https://online.cyberhome.ne.jp/user/?t=reg_form\"   -H \"Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7\"   -H \"Accept-Language: ja,en;q=0.9,en-GB;q=0.8,en-US;q=0.7\"   -H \"Cache-Control: max-age=0\"   -H \"Connection: keep-alive\"   -H \"Content-Type: application/x-www-form-urlencoded\"   -H \"Cookie: __utma=120222106.820879388.1705831931.1705831931.1705831931.1; __utmz=120222106.1705831931.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); _ga_1J3KZZLNBG=GS1.1.1705831933.1.0.1705831933.60.0.0; _ga=GA1.3.1474940224.1705831933; style=false; FNJSESSID=c69da3776a88770bc1905308d593432e\"   -H \"Origin: https://online.cyberhome.ne.jp\"   -H \"Referer: https://online.cyberhome.ne.jp/user/?t=reg_form\" --data-raw \"RULE_CHK=%89%EF%88%F5%8BK%96%F1%82%C9%93%AF%88%D3%82%B7%82%E9^\^&PRV_CHK=%8C%C2%90l%8F%EE%95%F1%82%CC%8E%E6%88%B5%82%C9%82%C2%82%A2%82%C4%93%AF%88%D3%82%B7%82%E9^\^&agree=1^\^&t=reg_form\""
+continue cnt
+}
 mes mc+"	"+buf2(512)+lf,1
 loop
 end
