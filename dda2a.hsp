@@ -1,0 +1,18 @@
+#runtime "hsp3cl"
+notesel dataoffile
+ddastr="":lpoke ddastr,0,0x0a0d0d
+lf="":poke lf,0,0xa
+fname=""+dir_cmdline:repeat:if strmid(fname,0,1)=" "{fname=strmid(fname,1,strlen(fname))}else{break}:loop
+noteload fname
+sdim dataoffile2,varsize(dataoffile)
+ddastep=0
+dataoffile2=""
+sdim ddasplit,1024,100000//58300
+split dataoffile,ddastr,ddasplit
+repeat length(ddasplit)
+dataoffile2+=ddasplit(cnt)+lf
+if (cnt\1000)=0{mes cnt}
+loop
+notesel dataoffile2
+notesave fname
+end
